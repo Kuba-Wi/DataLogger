@@ -40,7 +40,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+volatile bool rtc_wakeup_flag = false;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -106,13 +106,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  HAL_RTC_GetTime(&hrtc, &time, RTC_FORMAT_BIN);
-	  HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
+	  if (rtc_wakeup_flag)
+	  {
+		  rtc_wakeup_flag = false;
+		  HAL_RTC_GetTime(&hrtc, &time, RTC_FORMAT_BIN);
+		  HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
 
-	  sprintf(log_data, "%02d:%02d:%02d\n", time.Hours, time.Minutes, time.Seconds);
-	  HAL_UART_Transmit(&huart2, (uint8_t*)log_data, strlen(log_data), HAL_MAX_DELAY);
-
-	  HAL_Delay(1000);
+		  sprintf(log_data, "%02d:%02d:%02d\n", time.Hours, time.Minutes, time.Seconds);
+		  HAL_UART_Transmit(&huart2, (uint8_t*)log_data, strlen(log_data), HAL_MAX_DELAY);
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
