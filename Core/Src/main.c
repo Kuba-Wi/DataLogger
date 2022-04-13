@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "quadspi.h"
 #include "rtc.h"
 #include "usart.h"
 #include "gpio.h"
@@ -26,6 +27,7 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include <string.h>
+#include "n25q128a.h"
 
 /* USER CODE END Includes */
 
@@ -90,6 +92,8 @@ int main(void)
   MX_GPIO_Init();
   MX_RTC_Init();
   MX_USART2_UART_Init();
+  MX_QUADSPI_Init();
+  MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
 
   //wakeup every 10 seconds
