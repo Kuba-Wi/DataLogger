@@ -25,10 +25,12 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdio.h>
-#include <string.h>
+#include "spi.h"
+#include "string.h"
 #include "n25q128a.h"
 #include "lsm303c.h"
+
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -91,8 +93,8 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_RTC_Init();
   MX_USART2_UART_Init();
+  MX_RTC_Init();
   MX_QUADSPI_Init();
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
@@ -109,11 +111,10 @@ int main(void)
 
   RTC_TimeTypeDef time;
   RTC_DateTypeDef date;
-
-  char log_data[50];
-  double acc_data[3];
-
   uint32_t current_address = 0;
+
+  char log_data[100];
+  double acc_data[3];
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -121,42 +122,42 @@ int main(void)
   while (1)
   {
 	  if (rtc_wakeup_flag) {
-	  		  rtc_wakeup_flag = false;
-	  		  HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
-	  		  HAL_RTC_GetTime(&hrtc, &time, RTC_FORMAT_BIN);
-	  		  HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
-	  		  LSM303C_AccReadXYZinM_s2(acc_data);
+		  rtc_wakeup_flag = false;
+		  HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
+		  HAL_RTC_GetTime(&hrtc, &time, RTC_FORMAT_BIN);
+		  HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
+		  LSM303C_AccReadXYZinM_s2(acc_data);
 
-	  		  sprintf(log_data,
-	  				  "%02d:%02d:%02d, x = %f, y = %f, z = %f\n",
-	  				  time.Hours,
-	  				  time.Minutes,
-	  				  time.Seconds,
-	  				  acc_data[0],
-	  				  acc_data[1],
-	  				  acc_data[2]);
+		  sprintf(log_data,
+				  "%02d:%02d:%02d, x = %f, y = %f, z = %f\n",
+				  time.Hours,
+				  time.Minutes,
+				  time.Seconds,
+				  acc_data[0],
+				  acc_data[1],
+				  acc_data[2]);
 
-	  		  CSP_QSPI_Write((uint8_t*)log_data, current_address, strlen(log_data));
-	  		  current_address += strlen(log_data);
+		  CSP_QSPI_Write((uint8_t*)log_data, current_address, strlen(log_data));
+		  current_address += strlen(log_data);
 
-	  		  if (current_address >= N25Q128A_SUBSECTOR_SIZE) {
-	  			  CSP_QSPI_EnableMemoryMappedMode();
-	  			  HAL_UART_Transmit(&huart2, (uint8_t*)QSPI_FLASH_ADDRESS, current_address, HAL_MAX_DELAY);
-	  			  HAL_QSPI_Abort(&hqspi);
+		  if (current_address >= N25Q128A_SUBSECTOR_SIZE) {
+			  CSP_QSPI_EnableMemoryMappedMode();
+			  HAL_UART_Transmit(&huart2, (uint8_t*)QSPI_FLASH_ADDRESS, current_address, HAL_MAX_DELAY);
+			  HAL_QSPI_Abort(&hqspi);
 
-	  			  CSP_QSPI_Erase_Block(0);
-	  			  current_address = 0;
-	  		  }
-	  	  }
+			  CSP_QSPI_Erase_Block(0);
+			  current_address = 0;
+		  }
+	  }
 
-	  	  if (button_it_flag) {
-	  		  button_it_flag = false;
-	  		  HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
+	  if (button_it_flag) {
+		  button_it_flag = false;
+		  HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
 
-	  		  CSP_QSPI_EnableMemoryMappedMode();
-	  		  HAL_UART_Transmit(&huart2, (uint8_t*)QSPI_FLASH_ADDRESS, current_address, HAL_MAX_DELAY);
-	  		  HAL_QSPI_Abort(&hqspi);
-	  	  }
+		  CSP_QSPI_EnableMemoryMappedMode();
+		  HAL_UART_Transmit(&huart2, (uint8_t*)QSPI_FLASH_ADDRESS, current_address, HAL_MAX_DELAY);
+		  HAL_QSPI_Abort(&hqspi);
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
