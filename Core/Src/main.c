@@ -25,12 +25,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "spi.h"
-#include "string.h"
-#include "n25q128a.h"
 #include "lsm303c.h"
+#include "spi.h"
 
 #include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -99,15 +98,11 @@ int main(void)
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
 
-  CSP_QUADSPI_Init();
+  BSP_QSPI_Init();
 
   uint16_t init = (0b100001 << 8) | (0x27);
   LSM303C_AccInit(init);
 
-  //wakeup every 10 seconds
-  HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 20480, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
-
-  CSP_QSPI_EraseSector(0, N25Q128A_SECTOR_SIZE - 1);
 
   RTC_TimeTypeDef time;
   RTC_DateTypeDef date;
@@ -115,6 +110,12 @@ int main(void)
 
   char log_data[100];
   double acc_data[3];
+
+  BSP_QSPI_Erase_Chip();
+
+  //wakeup every 10 seconds
+  HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 20480, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -129,7 +130,7 @@ int main(void)
 		  LSM303C_AccReadXYZinM_s2(acc_data);
 
 		  sprintf(log_data,
-				  "%02d:%02d:%02d, x = %f, y = %f, z = %f\n",
+				  "%02d:%02d:%02d, x = %f, y = %f, z = %f\r\n",
 				  time.Hours,
 				  time.Minutes,
 				  time.Seconds,
@@ -137,15 +138,15 @@ int main(void)
 				  acc_data[1],
 				  acc_data[2]);
 
-		  CSP_QSPI_Write((uint8_t*)log_data, current_address, strlen(log_data));
+		  BSP_QSPI_Write((uint8_t*)log_data, current_address, strlen(log_data));
 		  current_address += strlen(log_data);
 
 		  if (current_address >= N25Q128A_SUBSECTOR_SIZE) {
-			  CSP_QSPI_EnableMemoryMappedMode();
+			  BSP_QSPI_EnableMemoryMappedMode();
 			  HAL_UART_Transmit(&huart2, (uint8_t*)QSPI_FLASH_ADDRESS, current_address, HAL_MAX_DELAY);
 			  HAL_QSPI_Abort(&hqspi);
 
-			  CSP_QSPI_Erase_Block(0);
+			  BSP_QSPI_Erase_Block(0);
 			  current_address = 0;
 		  }
 	  }
@@ -154,7 +155,7 @@ int main(void)
 		  button_it_flag = false;
 		  HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
 
-		  CSP_QSPI_EnableMemoryMappedMode();
+		  BSP_QSPI_EnableMemoryMappedMode();
 		  HAL_UART_Transmit(&huart2, (uint8_t*)QSPI_FLASH_ADDRESS, current_address, HAL_MAX_DELAY);
 		  HAL_QSPI_Abort(&hqspi);
 	  }
