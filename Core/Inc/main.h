@@ -44,6 +44,7 @@ extern "C" {
 extern volatile bool rtc_wakeup_flag;
 extern volatile bool button_center_flag;
 extern volatile bool tim6_period_flag;
+extern volatile bool usart_receive_flag;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

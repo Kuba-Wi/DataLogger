@@ -49,6 +49,7 @@
 volatile bool rtc_wakeup_flag = false;
 volatile bool button_center_flag = false;
 volatile bool tim6_period_flag = false;
+volatile bool usart_receive_flag = false;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -133,6 +134,7 @@ int main(void)
   char log_data[100];
   double acc_data[3];
   char lcd_data[6];
+  uint8_t usart_buffer;
   bool lcd_print_data = false;
 
   BSP_QSPI_Read((uint8_t*)&current_address, LAST_SUBSECTOR_ADDRESS, sizeof(current_address));
@@ -145,6 +147,8 @@ int main(void)
   //wakeup every 10 seconds
   HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, RTC_WAKEUP_COUNTER, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
   HAL_TIM_Base_Start_IT(&htim6);
+
+  HAL_UART_Receive_IT(&huart2, &usart_buffer, sizeof(usart_buffer));
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -198,6 +202,14 @@ int main(void)
 			  BSP_LCD_GLASS_DisplayString((uint8_t*)"FILLED");
 		  }
 		  lcd_print_data = !lcd_print_data;
+	  }
+
+	  if (usart_receive_flag) {
+		  usart_receive_flag = false;
+		  HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
+		  sendLastNLogs(current_address, usart_buffer);
+
+		  HAL_UART_Receive_IT(&huart2, &usart_buffer, sizeof(usart_buffer));
 	  }
     /* USER CODE END WHILE */
 
