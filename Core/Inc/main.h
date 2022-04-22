@@ -58,12 +58,10 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define RTC_WAKEUP_COUNTER 20480-1
 #define BUTTON_CENTER_Pin GPIO_PIN_0
 #define BUTTON_CENTER_GPIO_Port GPIOA
 #define BUTTON_CENTER_EXTI_IRQn EXTI0_IRQn
-#define BUTTON_UP_Pin GPIO_PIN_3
-#define BUTTON_UP_GPIO_Port GPIOA
-#define BUTTON_UP_EXTI_IRQn EXTI3_IRQn
 #define LD4_Pin GPIO_PIN_2
 #define LD4_GPIO_Port GPIOB
 #define LD5_Pin GPIO_PIN_8

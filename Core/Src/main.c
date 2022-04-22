@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "lcd.h"
 #include "quadspi.h"
 #include "rtc.h"
 #include "usart.h"
@@ -63,15 +64,6 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-//void clearFlashAndResetAddress(uint32_t* address) {
-//	*address = 0;
-//	BSP_QSPI_Erase_Chip();
-//	BSP_QSPI_Write((uint8_t*)address, LAST_SUBSECTOR_ADDRESS, sizeof(address));
-//
-//	rtc_wakeup_flag = false;
-//	button_center_flag = false;
-//}
-
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == BUTTON_CENTER_Pin) {
 		button_center_flag = true;
@@ -116,13 +108,15 @@ int main(void)
   MX_RTC_Init();
   MX_QUADSPI_Init();
   MX_SPI2_Init();
+  MX_LCD_Init();
   /* USER CODE BEGIN 2 */
 
   BSP_QSPI_Init();
+  BSP_LCD_GLASS_Init();
+  BSP_LCD_GLASS_Clear();
 
   uint16_t init = (0b100001 << 8) | (0x27);
   LSM303C_AccInit(init);
-
 
   RTC_TimeTypeDef time;
   RTC_DateTypeDef date;
@@ -133,7 +127,9 @@ int main(void)
 
   BSP_QSPI_Read((uint8_t*)&current_address, LAST_SUBSECTOR_ADDRESS, sizeof(current_address));
   if (current_address >= LAST_SUBSECTOR_ADDRESS) {
+	  BSP_LCD_GLASS_DisplayString((uint8_t*)"CLEAR");
 	  clearFlashAndResetAddress(&current_address);
+	  BSP_LCD_GLASS_Clear();
   }
 
   //wakeup every 10 seconds
@@ -164,7 +160,9 @@ int main(void)
 		  current_address += strlen(log_data);
 
 		  if (current_address >= LAST_SUBSECTOR_ADDRESS) {
+			  BSP_LCD_GLASS_DisplayString((uint8_t*)"CLEAR");
 			  clearFlashAndResetAddress(&current_address);
+			  BSP_LCD_GLASS_Clear();
 		  } else {
 			  BSP_QSPI_Erase_Block(LAST_SUBSECTOR_ADDRESS);
 			  BSP_QSPI_Write((uint8_t*)&current_address, LAST_SUBSECTOR_ADDRESS, sizeof(current_address));
