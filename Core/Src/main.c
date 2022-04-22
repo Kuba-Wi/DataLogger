@@ -25,6 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "helpers.h"
 #include "lsm303c.h"
 #include "spi.h"
 
@@ -44,7 +45,7 @@
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 volatile bool rtc_wakeup_flag = false;
-volatile bool button_it_flag = false;
+volatile bool button_center_flag = false;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -62,13 +63,23 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-void clearFlashAndResetAddress(uint32_t* address) {
-	*address = 0;
-	BSP_QSPI_Erase_Chip();
-	BSP_QSPI_Write((uint8_t*)address, LAST_SUBSECTOR_ADDRESS, sizeof(address));
+//void clearFlashAndResetAddress(uint32_t* address) {
+//	*address = 0;
+//	BSP_QSPI_Erase_Chip();
+//	BSP_QSPI_Write((uint8_t*)address, LAST_SUBSECTOR_ADDRESS, sizeof(address));
+//
+//	rtc_wakeup_flag = false;
+//	button_center_flag = false;
+//}
 
-	rtc_wakeup_flag = false;
-	button_it_flag = false;
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+	if (GPIO_Pin == BUTTON_CENTER_Pin) {
+		button_center_flag = true;
+	}
+}
+
+void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc) {
+	rtc_wakeup_flag = true;
 }
 
 /* USER CODE END 0 */
@@ -126,8 +137,7 @@ int main(void)
   }
 
   //wakeup every 10 seconds
-  HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 20480, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
-
+  HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, RTC_WAKEUP_COUNTER, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -161,13 +171,11 @@ int main(void)
 		  }
 	  }
 
-	  if (button_it_flag) {
-		  button_it_flag = false;
+	  if (button_center_flag) {
+		  button_center_flag = false;
 		  HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
 
-		  BSP_QSPI_EnableMemoryMappedMode();
-		  HAL_UART_Transmit(&huart2, (uint8_t*)QSPI_FLASH_ADDRESS, current_address, HAL_MAX_DELAY);
-		  HAL_QSPI_Abort(&hqspi);
+		  sendLastNLogs(current_address, 10);
 	  }
     /* USER CODE END WHILE */
 
