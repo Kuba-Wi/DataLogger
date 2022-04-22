@@ -2,6 +2,8 @@
 #include "quadspi.h"
 #include "usart.h"
 
+#include <stdio.h>
+
 void clearFlashAndResetAddress(uint32_t* address) {
 	*address = 0;
 	BSP_QSPI_Erase_Chip();
@@ -32,4 +34,14 @@ void sendLastNLogs(uint32_t current_address, uint8_t n) {
 
 	HAL_UART_Transmit(&huart2, (uint8_t*)(QSPI_FLASH_ADDRESS + start_address), current_address - start_address, HAL_MAX_DELAY);
 	HAL_QSPI_Abort(&hqspi);
+}
+
+void bytesToString(char* output, uint32_t bytes) {
+	if (bytes >= 1024 * 1024) {
+		sprintf(output, "%ldMB", bytes / (1024 * 1024));
+	} else if (bytes >= 1024) {
+		sprintf(output, "%ldKB", bytes / 1024);
+	} else {
+		sprintf(output, "%ldB", bytes);
+	}
 }

@@ -113,7 +113,6 @@ int main(void)
 
   BSP_QSPI_Init();
   BSP_LCD_GLASS_Init();
-  BSP_LCD_GLASS_Clear();
 
   uint16_t init = (0b100001 << 8) | (0x27);
   LSM303C_AccInit(init);
@@ -124,6 +123,7 @@ int main(void)
 
   char log_data[100];
   double acc_data[3];
+  char lcd_data[6];
 
   BSP_QSPI_Read((uint8_t*)&current_address, LAST_SUBSECTOR_ADDRESS, sizeof(current_address));
   if (current_address >= LAST_SUBSECTOR_ADDRESS) {
@@ -131,6 +131,10 @@ int main(void)
 	  clearFlashAndResetAddress(&current_address);
 	  BSP_LCD_GLASS_Clear();
   }
+
+  bytesToString(lcd_data, current_address);
+  BSP_LCD_GLASS_Clear();
+  BSP_LCD_GLASS_DisplayString((uint8_t*)lcd_data);
 
   //wakeup every 10 seconds
   HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, RTC_WAKEUP_COUNTER, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
@@ -167,6 +171,10 @@ int main(void)
 			  BSP_QSPI_Erase_Block(LAST_SUBSECTOR_ADDRESS);
 			  BSP_QSPI_Write((uint8_t*)&current_address, LAST_SUBSECTOR_ADDRESS, sizeof(current_address));
 		  }
+
+		  bytesToString(lcd_data, current_address);
+		  BSP_LCD_GLASS_Clear();
+		  BSP_LCD_GLASS_DisplayString((uint8_t*)lcd_data);
 	  }
 
 	  if (button_center_flag) {
