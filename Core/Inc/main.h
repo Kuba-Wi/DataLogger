@@ -60,9 +60,10 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define TIM6_PERIOD 2000-1
 #define RTC_WAKEUP_COUNTER 20480-1
 #define TIM6_PRESCALER 40000-1
-#define TIM6_PERIOD 2000-1
+#define USART_BUF_SIZE 9
 #define BUTTON_CENTER_Pin GPIO_PIN_0
 #define BUTTON_CENTER_GPIO_Port GPIOA
 #define BUTTON_CENTER_EXTI_IRQn EXTI0_IRQn

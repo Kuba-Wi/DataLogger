@@ -67,6 +67,8 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+uint8_t usart_buffer[USART_BUF_SIZE];
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == BUTTON_CENTER_Pin) {
 		button_center_flag = true;
@@ -85,6 +87,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 	if (huart == &huart2) {
+		HAL_UART_Receive_IT(&huart2, usart_buffer, USART_BUF_SIZE);
 		usart_receive_flag = true;
 	}
 }
@@ -141,8 +144,7 @@ int main(void)
   double acc_data[3];
   char lcd_data[6];
 
-  const uint8_t buffer_size = 2;
-  uint8_t usart_buffer[buffer_size];
+  HAL_UART_Receive_IT(&huart2, usart_buffer, USART_BUF_SIZE);
 
   bool lcd_print_data = false;
 
@@ -156,8 +158,6 @@ int main(void)
   //wakeup every 10 seconds
   HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, RTC_WAKEUP_COUNTER, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
   HAL_TIM_Base_Start_IT(&htim6);
-
-  HAL_UART_Receive_IT(&huart2, usart_buffer, buffer_size);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -215,10 +215,9 @@ int main(void)
 
 	  if (usart_receive_flag) {
 		  usart_receive_flag = false;
-		  HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
-		  sendNLogs(usart_buffer[0], current_address, usart_buffer[1]);
 
-		  HAL_UART_Receive_IT(&huart2, usart_buffer, buffer_size);
+		  HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
+		  sendRequestedData(usart_buffer, current_address);
 	  }
     /* USER CODE END WHILE */
 
