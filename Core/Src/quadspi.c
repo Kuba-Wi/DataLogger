@@ -395,6 +395,12 @@ uint8_t BSP_QSPI_Erase_Sector(uint32_t Sector)
     return QSPI_ERROR;
   }
 
+  /* Configure automatic polling mode to wait for end of erase */
+    if (QSPI_AutoPollingMemReady(N25Q128A_SECTOR_ERASE_MAX_TIME) != QSPI_OK)
+    {
+      return QSPI_ERROR;
+    }
+
   return QSPI_OK;
 }
 

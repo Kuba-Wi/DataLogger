@@ -62,6 +62,15 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+void clearFlashAndResetAddress(uint32_t* address) {
+	*address = 0;
+	BSP_QSPI_Erase_Chip();
+	BSP_QSPI_Write((uint8_t*)address, LAST_SUBSECTOR_ADDRESS, sizeof(address));
+
+	rtc_wakeup_flag = false;
+	button_it_flag = false;
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -111,7 +120,10 @@ int main(void)
   char log_data[100];
   double acc_data[3];
 
-  BSP_QSPI_Erase_Chip();
+  BSP_QSPI_Read((uint8_t*)&current_address, LAST_SUBSECTOR_ADDRESS, sizeof(current_address));
+  if (current_address >= LAST_SUBSECTOR_ADDRESS) {
+	  clearFlashAndResetAddress(&current_address);
+  }
 
   //wakeup every 10 seconds
   HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 20480, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
@@ -141,13 +153,11 @@ int main(void)
 		  BSP_QSPI_Write((uint8_t*)log_data, current_address, strlen(log_data));
 		  current_address += strlen(log_data);
 
-		  if (current_address >= N25Q128A_SUBSECTOR_SIZE) {
-			  BSP_QSPI_EnableMemoryMappedMode();
-			  HAL_UART_Transmit(&huart2, (uint8_t*)QSPI_FLASH_ADDRESS, current_address, HAL_MAX_DELAY);
-			  HAL_QSPI_Abort(&hqspi);
-
-			  BSP_QSPI_Erase_Block(0);
-			  current_address = 0;
+		  if (current_address >= LAST_SUBSECTOR_ADDRESS) {
+			  clearFlashAndResetAddress(&current_address);
+		  } else {
+			  BSP_QSPI_Erase_Block(LAST_SUBSECTOR_ADDRESS);
+			  BSP_QSPI_Write((uint8_t*)&current_address, LAST_SUBSECTOR_ADDRESS, sizeof(current_address));
 		  }
 	  }
 
