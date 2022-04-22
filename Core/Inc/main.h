@@ -43,6 +43,7 @@ extern "C" {
 /* USER CODE BEGIN EC */
 extern volatile bool rtc_wakeup_flag;
 extern volatile bool button_center_flag;
+extern volatile bool tim6_period_flag;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
@@ -59,6 +60,8 @@ void Error_Handler(void);
 
 /* Private defines -----------------------------------------------------------*/
 #define RTC_WAKEUP_COUNTER 20480-1
+#define TIM6_PRESCALER 40000-1
+#define TIM6_PERIOD 2000-1
 #define BUTTON_CENTER_Pin GPIO_PIN_0
 #define BUTTON_CENTER_GPIO_Port GPIOA
 #define BUTTON_CENTER_EXTI_IRQn EXTI0_IRQn

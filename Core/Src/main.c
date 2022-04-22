@@ -21,6 +21,7 @@
 #include "lcd.h"
 #include "quadspi.h"
 #include "rtc.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -47,6 +48,7 @@
 /* USER CODE BEGIN PM */
 volatile bool rtc_wakeup_flag = false;
 volatile bool button_center_flag = false;
+volatile bool tim6_period_flag = false;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -72,6 +74,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
 void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc) {
 	rtc_wakeup_flag = true;
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim) {
+	if (htim == &htim6) {
+		tim6_period_flag = true;
+	}
 }
 
 /* USER CODE END 0 */
@@ -109,6 +117,7 @@ int main(void)
   MX_QUADSPI_Init();
   MX_SPI2_Init();
   MX_LCD_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
   BSP_QSPI_Init();
@@ -124,6 +133,7 @@ int main(void)
   char log_data[100];
   double acc_data[3];
   char lcd_data[6];
+  bool lcd_print_data = false;
 
   BSP_QSPI_Read((uint8_t*)&current_address, LAST_SUBSECTOR_ADDRESS, sizeof(current_address));
   if (current_address >= LAST_SUBSECTOR_ADDRESS) {
@@ -132,12 +142,9 @@ int main(void)
 	  BSP_LCD_GLASS_Clear();
   }
 
-  bytesToString(lcd_data, current_address);
-  BSP_LCD_GLASS_Clear();
-  BSP_LCD_GLASS_DisplayString((uint8_t*)lcd_data);
-
   //wakeup every 10 seconds
   HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, RTC_WAKEUP_COUNTER, RTC_WAKEUPCLOCK_RTCCLK_DIV16);
+  HAL_TIM_Base_Start_IT(&htim6);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -171,10 +178,6 @@ int main(void)
 			  BSP_QSPI_Erase_Block(LAST_SUBSECTOR_ADDRESS);
 			  BSP_QSPI_Write((uint8_t*)&current_address, LAST_SUBSECTOR_ADDRESS, sizeof(current_address));
 		  }
-
-		  bytesToString(lcd_data, current_address);
-		  BSP_LCD_GLASS_Clear();
-		  BSP_LCD_GLASS_DisplayString((uint8_t*)lcd_data);
 	  }
 
 	  if (button_center_flag) {
@@ -182,6 +185,19 @@ int main(void)
 		  HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
 
 		  sendLastNLogs(current_address, 10);
+	  }
+
+	  if (tim6_period_flag) {
+		  tim6_period_flag = false;
+		  if (lcd_print_data) {
+			  bytesToString(lcd_data, current_address);
+			  BSP_LCD_GLASS_Clear();
+			  BSP_LCD_GLASS_DisplayString((uint8_t*)lcd_data);
+		  } else {
+			  BSP_LCD_GLASS_Clear();
+			  BSP_LCD_GLASS_DisplayString((uint8_t*)"FILLED");
+		  }
+		  lcd_print_data = !lcd_print_data;
 	  }
     /* USER CODE END WHILE */
 
