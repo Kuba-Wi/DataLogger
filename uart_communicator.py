@@ -10,16 +10,22 @@ def sender(ser):
         data_to_send = input().split()
         try:
             if data_to_send[0] == "0" or data_to_send[0] == "1":
-                ser.write(int(data_to_send[0]).to_bytes(1, 'big'))
-                ser.write(int(data_to_send[1]).to_bytes(1, 'big'))
+                b0 = int(data_to_send[0]).to_bytes(1, 'big')
+                b1 = int(data_to_send[1]).to_bytes(1, 'big')
+                ser.write(b0)
+                ser.write(b1)
                 for _ in range(PACKET_LENGTH - 2):
                     ser.write(int(0).to_bytes(1, 'big'))
             elif data_to_send[0] == "2":
                 if (len(data_to_send[1]) == TIME_STR_LENGTH):
-                    ser.write(int(data_to_send[0]).to_bytes(1, 'big'))
-                    ser.write(bytes(data_to_send[1], "utf-8"))
+                    b0 = int(data_to_send[0]).to_bytes(1, 'big')
+                    b1 = bytes(data_to_send[1], "utf-8")
+                    ser.write(b0)
+                    ser.write(b1)
                 else:
                     print("Wrong length of time string")
+            else:
+                print("Wrong first byte of a packet")
         except:
             print("Wrong input")
 
