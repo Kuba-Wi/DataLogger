@@ -39,7 +39,7 @@ void MX_LCD_Init(void)
   /* USER CODE END LCD_Init 1 */
   hlcd.Instance = LCD;
   hlcd.Init.Prescaler = LCD_PRESCALER_1;
-  hlcd.Init.Divider = LCD_DIVIDER_16;
+  hlcd.Init.Divider = LCD_DIVIDER_31;
   hlcd.Init.Duty = LCD_DUTY_1_4;
   hlcd.Init.Bias = LCD_BIAS_1_3;
   hlcd.Init.VoltageSource = LCD_VOLTAGESOURCE_INTERNAL;
